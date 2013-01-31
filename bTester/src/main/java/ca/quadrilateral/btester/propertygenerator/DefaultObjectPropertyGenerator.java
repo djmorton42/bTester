@@ -30,6 +30,10 @@ or implied, of Daniel Morton.
 
 package ca.quadrilateral.btester.propertygenerator;
 
+import java.lang.reflect.Modifier;
+
+import ca.quadrilateral.btester.exception.TestException;
+
 public class DefaultObjectPropertyGenerator implements PropertyGenerator<Object> {
 
 	private final Class<?> objectClass;
@@ -39,6 +43,10 @@ public class DefaultObjectPropertyGenerator implements PropertyGenerator<Object>
 	}
 	
 	public Object generateProperty() {
+        if (Modifier.isAbstract(objectClass.getModifiers())) {
+            throw new TestException("Can not instantiate field of type " + objectClass.getName() + " as it is abstract.  Use the .override method to specify a concrete runtime type.");       
+        }
+	    
 		try {
 			return objectClass.newInstance();
 		} catch (Exception e) {

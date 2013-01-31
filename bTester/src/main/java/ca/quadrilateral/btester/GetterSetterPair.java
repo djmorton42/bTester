@@ -32,6 +32,8 @@ package ca.quadrilateral.btester;
 
 import java.lang.reflect.Method;
 
+import ca.quadrilateral.btester.exception.TestException;
+
 public class GetterSetterPair {
 	private final Method getter;
 	private final Method setter;
@@ -44,9 +46,25 @@ public class GetterSetterPair {
 		this.returnType = getter.getReturnType();
 
         final String setterName = setter.getName();
- 
 
 		this.property = setterName.substring(3,4).toLowerCase() + setterName.substring(4);
+	}
+	
+	public GetterSetterPair(final Method getter, final Method setter, final Class<?> returnType) {
+		this.getter = getter;
+		this.setter = setter;
+		this.returnType = returnType == null ? getter.getReturnType() : returnType;
+		
+		if (returnType != null) {
+			if (!getter.getReturnType().isAssignableFrom(returnType)) {
+				throw new TestException("The forced return type " + returnType.getName() + " can not be used for property " + setter.getName() + " because it is incompatible with the method return type " + getter.getReturnType());				
+			}
+		}
+
+        final String setterName = setter.getName();
+
+		this.property = setterName.substring(3,4).toLowerCase() + setterName.substring(4);
+		
 	}
 
 	public Method getGetter() {

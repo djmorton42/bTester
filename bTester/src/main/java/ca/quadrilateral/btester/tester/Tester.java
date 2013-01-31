@@ -35,5 +35,6 @@ import java.lang.reflect.Method;
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 
 public interface Tester {
-	void executeTest(Object classUnderTetst, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator);
+	void executeTest(Object classUnderTest, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator);
+	Object generateProperty(final PropertyGenerator<?> propertyGenerator);
 }

@@ -30,6 +30,7 @@ or implied, of Daniel Morton.
 
 package ca.quadrilateral.btester.propertygenerator;
 
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -63,12 +64,17 @@ public class PropertyGeneratorFactory {
 	}	
 	
 	public PropertyGenerator<?> getPropertyGenerator(Class<?> propertyType)  {
-		Class<?> generatorClass = propertyGeneratorClassMap.get(propertyType);
+		
+		final Class<?> generatorClass = propertyGeneratorClassMap.get(propertyType);
 		if (generatorClass == null) {
+		    if (propertyType.isEnum()) {
+		        return new DefaultEnumPropertyGenerator(propertyType);
+		    }
+		    
 			return new DefaultObjectPropertyGenerator(propertyType);
 		} else {		
 			try {
-			return (PropertyGenerator<?>) generatorClass.newInstance();
+				return (PropertyGenerator<?>) generatorClass.newInstance();
 			} catch (Exception e) {
 				throw new TestException("Error generating PropertyGenerator for type " + propertyType, e);
 			}

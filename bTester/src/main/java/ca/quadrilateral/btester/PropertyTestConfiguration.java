@@ -26,7 +26,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 The views and conclusions contained in the software and documentation are those of the
 authors and should not be interpreted as representing official policies, either expressed
 or implied, of Daniel Morton.
-*/
+ */
 
 package ca.quadrilateral.btester;
 
@@ -36,42 +36,57 @@ import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 import ca.quadrilateral.btester.tester.Tester;
 
 public class PropertyTestConfiguration {
-	private Method getterMethod;
-	private Method setterMethod;
-	private Tester tester;
-	private PropertyGenerator<?> generator;
-	
-	public PropertyTestConfiguration(final Method getterMethod, final Method setterMethod, final Tester tester, final PropertyGenerator<?> generator) {
-		this.getterMethod = getterMethod;
-		this.setterMethod = setterMethod;
-		this.tester = tester;
-		this.generator = generator;
-	}
-	public Method getGetterMethod() {
-		return getterMethod;
-	}
-	public void setGetterMethod(Method getterMethod) {
-		this.getterMethod = getterMethod;
-	}
-	public Method getSetterMethod() {
-		return setterMethod;
-	}
-	public void setSetterMethod(Method setterMethod) {
-		this.setterMethod = setterMethod;
-	}
-	public Tester getTester() {
-		return tester;
-	}
-	public void setTester(Tester tester) {
-		this.tester = tester;
-	}
-	public PropertyGenerator<?> getGenerator() {
-		return generator;
-	}
-	public void setGenerator(PropertyGenerator<?> generator) {
-		this.generator = generator;
-	}
+    private Method getterMethod;
+    private Method setterMethod;
+    private Tester tester;
+    private PropertyGenerator<?> generator;
+    private Class<?> runtimePropertyType;
 
-	
-	
+    public PropertyTestConfiguration(final Method getterMethod, final Method setterMethod, final Tester tester, final PropertyGenerator<?> generator) {
+        this(getterMethod, setterMethod, tester, generator, null);
+    }
+
+    public PropertyTestConfiguration(final Method getterMethod, final Method setterMethod, final Tester tester, final PropertyGenerator<?> generator, final Class<?> runtimePropertyType) {
+        this.getterMethod = getterMethod;
+        this.setterMethod = setterMethod;
+        this.tester = tester;
+        this.generator = generator;
+        this.runtimePropertyType = runtimePropertyType == null ? getterMethod.getReturnType() : runtimePropertyType;
+    }
+
+    public Class<?> getRuntimePropertyType() {
+        return this.runtimePropertyType;
+    }
+    
+    public void setRuntimePropertyType(final Class<?> runtimePropertyType) {
+        this.runtimePropertyType = runtimePropertyType;
+    }
+
+    public Method getGetterMethod() {
+        return getterMethod;
+    }
+    public void setGetterMethod(Method getterMethod) {
+        this.getterMethod = getterMethod;
+    }
+    public Method getSetterMethod() {
+        return setterMethod;
+    }
+    public void setSetterMethod(Method setterMethod) {
+        this.setterMethod = setterMethod;
+    }
+    public Tester getTester() {
+        return tester;
+    }
+    public void setTester(Tester tester) {
+        this.tester = tester;
+    }
+    public PropertyGenerator<?> getGenerator() {
+        return generator;
+    }
+    public void setGenerator(PropertyGenerator<?> generator) {
+        this.generator = generator;
+    }
+
+
+
 }

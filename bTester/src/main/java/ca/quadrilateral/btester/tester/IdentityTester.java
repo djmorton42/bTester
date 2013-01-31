@@ -40,12 +40,12 @@ import org.slf4j.LoggerFactory;
 import ca.quadrilateral.btester.exception.TestException;
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 
-public class IdentityTester implements Tester {
+public class IdentityTester extends AbstractTester {
 	private static final Logger logger = LoggerFactory.getLogger(IdentityTester.class);
 	
 	public void executeTest(Object classUnderTest, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator) {
 		try {
-			final Object property = propertyGenerator.generateProperty();
+			final Object property = generateProperty(propertyGenerator);
 		
 			logger.info("Testing method {} for identity using property value {}", setterMethod,  property);
 			
