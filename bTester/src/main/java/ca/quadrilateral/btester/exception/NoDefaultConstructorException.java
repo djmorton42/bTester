@@ -28,34 +28,15 @@ authors and should not be interpreted as representing official policies, either 
 or implied, of Daniel Morton.
 */
 
-package ca.quadrilateral.btester.tester;
+package ca.quadrilateral.btester.exception;
 
-import java.lang.reflect.Method;
+/**
+ * Identifies that a class does not have a default constructor.
+ */
+public final class NoDefaultConstructorException extends TestException {
+	private static final long serialVersionUID = -0x01L;
 
-import junit.framework.Assert;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import ca.quadrilateral.btester.exception.TestException;
-import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
-
-public class IdentityTester extends AbstractTester {
-	private static final Logger logger = LoggerFactory.getLogger(IdentityTester.class);
-	
-    @Override
-    protected void executeTestImpl(Object classUnderTest, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator) {
-		try {
-			final Object property = generateProperty(propertyGenerator);
-		
-			logger.info("Testing method {} for identity using property value {}", setterMethod,  property);
-			
-			setterMethod.invoke(classUnderTest, property);
-			final Object getValue = getterMethod.invoke(classUnderTest);
-			Assert.assertTrue("get Property Value " + getValue + " did not equal set Property value " + property, property == getValue);
-		} catch (Exception e) {
-			throw new TestException("Error executing IdentityTester for method " + getterMethod.getName() + " of class " + classUnderTest.getClass(), e);
-		}
+	public NoDefaultConstructorException(final Class<?> clazz, final Throwable cause) {
+		super("No default constructor could be found for " + clazz, cause);
 	}
-
 }

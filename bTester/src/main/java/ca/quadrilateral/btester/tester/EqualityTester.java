@@ -43,7 +43,8 @@ import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 public class EqualityTester extends AbstractTester {
 	private static final Logger logger = LoggerFactory.getLogger(EqualityTester.class);
 	
-	public void executeTest(Object classUnderTest, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator) {
+    @Override
+	protected void executeTestImpl(Object classUnderTest, Method setterMethod, Method getterMethod, PropertyGenerator<?> propertyGenerator) {
 		try {
 			final Object property = generateProperty(propertyGenerator);
 		

@@ -34,6 +34,10 @@ import java.lang.reflect.Method;
 
 import ca.quadrilateral.btester.exception.TestException;
 
+/**
+ * An immutable getter/setter tuple. This tuple provides access to the underlying class {@link Method} and provides
+ * other higher-level bean information.
+ */
 public class GetterSetterPair {
 	private final Method getter;
 	private final Method setter;
@@ -78,8 +82,8 @@ public class GetterSetterPair {
 	public Class<?> getReturnType() {
 		return this.returnType;
 	}
+
 	public String getProperty() {
 		return this.property;
 	}
-	
 }
