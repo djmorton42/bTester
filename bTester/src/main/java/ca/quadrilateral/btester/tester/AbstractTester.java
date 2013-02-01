@@ -30,11 +30,37 @@ or implied, of Daniel Morton.
 
 package ca.quadrilateral.btester.tester;
 
+import java.lang.reflect.Method;
+
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 
+/**
+ * An abstract implementation that performs pre- and post-test activities. Subclasses must implement
+ * {@link #executeTestImpl(Object, Method, Method, PropertyGenerator)}, which is guaranteed only to be executed when
+ * the methods are guaranteed to be accessible.
+ * <p>
+ * Because the JavaBeans specification allows for package-private members, some methods must be flagged as accessible.
+ * While the method could, in theory, be set accessible globally, this would seem to exhibit side effects. As such,
+ * this implementation toggles the accessibility of both getter and setter methods while executing the test.
+ */
 public abstract class AbstractTester implements Tester {
     @Override
     public Object generateProperty(final PropertyGenerator<?> propertyGenerator) {
         return propertyGenerator.generateProperty();
     }
+
+    @Override
+	public final void executeTest(final Object classUnderTest, final Method setterMethod, final Method getterMethod, final PropertyGenerator<?> propertyGenerator) {
+        try {
+            setterMethod.setAccessible(true);
+            getterMethod.setAccessible(true);
+
+            this.executeTestImpl(classUnderTest, setterMethod, getterMethod, propertyGenerator);
+        } finally {
+            getterMethod.setAccessible(false);
+            setterMethod.setAccessible(false);
+        }
+    }
+
+	protected abstract void executeTestImpl(final Object classUnderTest, final Method setterMethod, final Method getterMethod, final PropertyGenerator<?> propertyGenerator);
 }
