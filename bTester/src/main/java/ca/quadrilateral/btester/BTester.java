@@ -30,7 +30,9 @@ or implied, of Daniel Morton.
 
 package ca.quadrilateral.btester;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,6 +43,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.quadrilateral.btester.exception.NoDefaultConstructorException;
 import ca.quadrilateral.btester.exception.TestException;
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 import ca.quadrilateral.btester.propertygenerator.PropertyGeneratorFactory;
@@ -60,13 +63,18 @@ public class BTester {
     public BTester(final Class<?> clazz) {
         this.clazzUnderTest = clazz;
 
-        final Method[] methods = clazz.getMethods();
+        final Method[] methods = clazz.getDeclaredMethods();
 
         for(Method method : methods) {
+            // JavaBean spec doesn't consider privates as bean members.
+            if(Modifier.isPrivate(method.getModifiers())){
+                continue;
+            }
+
             final String name = method.getName();
             if (name.startsWith("is") || name.startsWith("get")) {
                 try { 
-                    final Method setter = clazz.getMethod(getSetterEquivalent(method), method.getReturnType());
+                    final Method setter = clazz.getDeclaredMethod(getSetterEquivalent(method), method.getReturnType());
                     final GetterSetterPair getterSetterPair = new GetterSetterPair(method, setter);
                     getterSetterPairs.add(new GetterSetterPair(method, setter));
                     propertyGetterSetterMap.put(getPropertyName(method), getterSetterPair);
@@ -154,18 +162,17 @@ public class BTester {
         }
     }
 
+    /**
+     *
+     * @throws NoDefaultConstructorException If no default constructor can be found for the class under interrogation.
+     * @throws TestException If any other exception is encountered during test execution.
+     */
     public void test() {
         logger.info("Executing bean test on class " + this.clazzUnderTest);
 
         final PropertyGeneratorFactory propertyGeneratorFactory = new PropertyGeneratorFactory();
         final TesterFactory testerFactory = new TesterFactory();
-        final Object classToTest;
-
-        try {
-            classToTest = this.clazzUnderTest.newInstance();
-        } catch (Exception e) {
-            throw new TestException(e);
-        }
+        final Object classToTest = newInstance(this.clazzUnderTest);
 
         for(GetterSetterPair getterSetterPair : getterSetterPairs) {
             final String propertyToTest = getterSetterPair.getProperty();
@@ -177,6 +184,48 @@ public class BTester {
         }
 
         logger.info("Completed bean test on class " + this.clazzUnderTest);
+    }
+
+    private <T> T newInstance(final Class<T> clazz) throws NoDefaultConstructorException, TestException {
+        // Check for a non-static inner class.
+        final Class<?> outerClazz = clazz.getDeclaringClass();
+        if(outerClazz != null && !Modifier.isStatic(clazz.getModifiers())){
+            final Object outer = this.tryNewInstance(outerClazz);
+            return this.tryNewInstance(clazz, outer);
+        }
+
+        // Check for a local member class (pretty useless).
+        final Class<?> enclosingClazz = clazz.getEnclosingClass();
+        if(enclosingClazz != null && clazz.isLocalClass()){
+            final Object enclosing = this.tryNewInstance(enclosingClazz);
+            return this.tryNewInstance(clazz, enclosing);
+        }
+
+        return this.tryNewInstance(clazz);
+    }
+
+    private <T> T tryNewInstance(final Class<T> clazz, final Object ... args) throws NoDefaultConstructorException, TestException  {
+        try{
+            Class<?>[] argTypes = null; 
+            if(args != null){
+                argTypes = new Class<?>[args.length];
+                for(int i = 0; i < args.length; i++){
+                    argTypes[i] = args[i].getClass();
+                }
+            }
+            return clazz.getDeclaredConstructor(argTypes).newInstance(args);
+        } catch(final NoSuchMethodException ex) {
+            // Not there.
+            throw new NoDefaultConstructorException(clazz, ex);
+        } catch(final IllegalAccessException ex) {
+            // Probably private.
+            throw new NoDefaultConstructorException(clazz, ex);
+
+        } catch(final InstantiationException ex) {
+            throw new TestException("Could not invoke defalut constructor for " + clazz, ex);
+        } catch(final InvocationTargetException ex) {
+            throw new TestException("Generic exception while invoking default constructor for " + clazz + ". See nested exception.", ex);
+        }
     }
 
     private Tester getTester(final TesterFactory testerFactory, final GetterSetterPair getterSetterPair) {
