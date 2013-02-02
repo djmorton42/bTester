@@ -25,6 +25,8 @@ public class DefaultCollectionPropertyGenerator implements PropertyGenerator<Col
 			return new ArrayList();
 		} else if (Queue.class.isAssignableFrom(objectClass)) {
 			return new PriorityQueue();
+		} else if (Collection.class.equals(objectClass)) {
+		    return new ArrayList();
 		} else {
 			throw new UnsupportedOperationException("Generating properties of collections of type " + objectClass + " is not yet supported.");
 		}
