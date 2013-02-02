@@ -28,30 +28,31 @@ authors and should not be interpreted as representing official policies, either 
 or implied, of Daniel Morton or contributors.
  */
 
-package ca.quadrilateral.btester.propertygenerator;
+package ca.quadrilateral.btester.discovery;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Iterator;
 
-import ca.quadrilateral.btester.exception.AbstractPropertyException;
-
-public class DefaultObjectPropertyGenerator implements PropertyGenerator<Object> {
-
-	private final Class<?> objectClass;
-	
-	public DefaultObjectPropertyGenerator(final Class<?> objectClass) {
-		this.objectClass = objectClass;
-	}
-	
-	public Object generateProperty() {
-        if (Modifier.isAbstract(objectClass.getModifiers())) {
-        	throw new AbstractPropertyException(objectClass);
-        }
-	    
-		try {
-			return objectClass.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException("Error instantiating new object of type " + objectClass.getName());
+public abstract class AbstractTestableMethodDiscoverer implements TestableMethodDiscoverer {
+	protected void removePrivateMethods(final Iterable<Method> methods) {
+		final Iterator<Method> methodIterator = methods.iterator();
+		
+		while (methodIterator.hasNext()) {
+			final Method method = methodIterator.next();
+			if (Modifier.isPrivate(method.getModifiers())) {
+				methodIterator.remove();
+			}
 		}
 	}
-
+	
+	protected String getSetterEquivalent(final Method getterMethod) {
+        if (getterMethod.getName().startsWith("is")) {
+            return "set" + getterMethod.getName().substring(2);
+        } else if (getterMethod.getName().startsWith("get")){
+            return "set" + getterMethod.getName().substring(3);
+        } else {
+        	throw new IllegalArgumentException("Method does not appear to be a getter");
+        }
+	}
 }

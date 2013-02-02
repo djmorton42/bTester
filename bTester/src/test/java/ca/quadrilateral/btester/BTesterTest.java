@@ -30,9 +30,18 @@ or implied, of Daniel Morton or contributors.
 
 package ca.quadrilateral.btester;
 
+import java.lang.reflect.Method;
+import java.util.Collection;
+
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import ca.quadrilateral.btester.exception.NoDefaultConstructorException;
+import ca.quadrilateral.btester.exception.TestException;
+import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
+import ca.quadrilateral.btester.tester.AbstractTester;
+import ca.quadrilateral.btester.tester.Tester;
 
 public final class BTesterTest
 {
@@ -73,8 +82,61 @@ public final class BTesterTest
         protected String getA() { return this.a; }
         protected void setA(final String a) { this.a = a; }
     }
+    
+    final static class PrivateMethods {
+    	private String a;
+    	private String b;
+    	
+    	String getA() { return this.a; }
+    	void setA(final String a) { 
+    		this.a = a;
+    		setB(getB() + a);
+    	}
+    	
+    	private String getB() { return this.b; }
+    	private void setB(final String b) { this.b = b; }
+    }
 
+    private static class DoubleBTester extends AbstractTester {
+        @Override
+    	protected void executeTestImpl(final Object classUnderTest, final Method setterMethod, final Method getterMethod, final PropertyGenerator<?> propertyGenerator) {
+    		try {
+    			final String property = (String)generateProperty(propertyGenerator);
+    			final String doubleProperty = property + property;
+    		
+    			setterMethod.invoke(classUnderTest, property);
+    			Assert.assertTrue("get Property Value did not equal set Property value", doubleProperty.equals(getterMethod.invoke(classUnderTest)));
+    		} catch (Exception e) {
+    			throw new TestException("Error executing EqualityTester for method " + getterMethod.getName() + " of class " + classUnderTest.getClass(), e);
+    		}
+    	}
+    }
 
+    
+    @Test
+    public void testHandlesAbstractSuperMethods() {
+    	final Collection<String> testedProperties = new BTester(SubClass.class).test();
+    	Assert.assertTrue("Abstract superclass public property 'a' should have been tested", testedProperties.contains("a"));
+    	Assert.assertTrue("Abstract superclass protected property 'c' should have been tested", testedProperties.contains("c"));
+    	Assert.assertTrue("Subclass property 'b' should have been tested", testedProperties.contains("b"));
+    }
+
+    @Test
+    public void testDoesNotSeePrivateMethods() {
+    	final Collection<String> testedProperties = new BTester(PrivateMethods.class).test();
+    	Assert.assertTrue("Package private property 'a' should have been tested", testedProperties.contains("a"));
+    	Assert.assertTrue("Private property 'b' should not have been tested", !testedProperties.contains("b"));
+    }
+    
+    @Test
+    public void overridenMethodShouldBeTestedInsteadOfSuperMethod() {
+    	final Collection<String> testedProperties = new BTester(SubSubClass.class).override("b", new DoubleBTester()).test();
+    	Assert.assertTrue("Abstract superclass public property 'a' should have been tested", testedProperties.contains("a"));
+    	Assert.assertTrue("Abstract superclass protected property 'c' should have been tested", testedProperties.contains("c"));
+    	Assert.assertTrue("SubSubclass property 'b' should have been tested", testedProperties.contains("b"));    			
+    }
+    
+    
     @Test
     public void testSeesPackagePrivateMethods() {
         new BTester(PackagePrivateMethods.class).test();

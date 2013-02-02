@@ -28,30 +28,27 @@ authors and should not be interpreted as representing official policies, either 
 or implied, of Daniel Morton or contributors.
  */
 
-package ca.quadrilateral.btester.propertygenerator;
+package ca.quadrilateral.btester.discovery;
 
-import java.lang.reflect.Modifier;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
-import ca.quadrilateral.btester.exception.AbstractPropertyException;
+public class DeclaredTestableMethodDiscoverer extends AbstractTestableMethodDiscoverer {
 
-public class DefaultObjectPropertyGenerator implements PropertyGenerator<Object> {
-
-	private final Class<?> objectClass;
-	
-	public DefaultObjectPropertyGenerator(final Class<?> objectClass) {
-		this.objectClass = objectClass;
+	@Override
+	public Collection<Method> discover(final Class<?> clazz) {
+		final Collection<Method> methods = new ArrayList<Method>(Arrays.asList(clazz.getDeclaredMethods()));
+		
+		super.removePrivateMethods(methods);
+		
+		return methods;
 	}
-	
-	public Object generateProperty() {
-        if (Modifier.isAbstract(objectClass.getModifiers())) {
-        	throw new AbstractPropertyException(objectClass);
-        }
-	    
-		try {
-			return objectClass.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException("Error instantiating new object of type " + objectClass.getName());
-		}
+
+	@Override
+	public Method getAssociatedSetter(final Class<?> clazz, final Method getter) throws NoSuchMethodException {
+		return clazz.getDeclaredMethod(super.getSetterEquivalent(getter), getter.getReturnType());
 	}
 
 }

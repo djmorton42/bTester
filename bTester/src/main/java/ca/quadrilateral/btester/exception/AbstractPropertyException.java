@@ -28,30 +28,15 @@ authors and should not be interpreted as representing official policies, either 
 or implied, of Daniel Morton or contributors.
  */
 
-package ca.quadrilateral.btester.propertygenerator;
+package ca.quadrilateral.btester.exception;
 
-import java.lang.reflect.Modifier;
+/**
+ * Identifies that a object property being generated is not an concrete type.
+ */
+public final class AbstractPropertyException extends TestException {
+	private static final long serialVersionUID = -0x01L;
 
-import ca.quadrilateral.btester.exception.AbstractPropertyException;
-
-public class DefaultObjectPropertyGenerator implements PropertyGenerator<Object> {
-
-	private final Class<?> objectClass;
-	
-	public DefaultObjectPropertyGenerator(final Class<?> objectClass) {
-		this.objectClass = objectClass;
+	public AbstractPropertyException(final Class<?> clazz) {
+		super("Can not instantiate field of type " + clazz + " as it is abstract (or an interface).  Use the .override method of bTester to specify a concrete runtime type");
 	}
-	
-	public Object generateProperty() {
-        if (Modifier.isAbstract(objectClass.getModifiers())) {
-        	throw new AbstractPropertyException(objectClass);
-        }
-	    
-		try {
-			return objectClass.newInstance();
-		} catch (Exception e) {
-			throw new RuntimeException("Error instantiating new object of type " + objectClass.getName());
-		}
-	}
-
 }

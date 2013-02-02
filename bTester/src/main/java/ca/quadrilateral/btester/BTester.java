@@ -34,8 +34,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,6 +45,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ca.quadrilateral.btester.discovery.ParentInclusiveTestableMethodDiscoverer;
+import ca.quadrilateral.btester.discovery.TestableMethodDiscoverer;
 import ca.quadrilateral.btester.exception.NoDefaultConstructorException;
 import ca.quadrilateral.btester.exception.TestException;
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
@@ -61,20 +65,26 @@ public class BTester {
     private final Set<String> ignoreList = new HashSet<String>();	
 
     public BTester(final Class<?> clazz) {
+    	this(clazz, new ParentInclusiveTestableMethodDiscoverer());
+    }
+    
+    public BTester(final Class<?> clazz, final TestableMethodDiscoverer testableMethodDiscoverer) {
+    	if (clazz == null) {
+    		throw new IllegalArgumentException("Class to test must not be null");
+    	}
+    	if (testableMethodDiscoverer == null) {
+    		throw new IllegalArgumentException("TestableMethodDiscoverer must not be null");
+    	}
+    	
         this.clazzUnderTest = clazz;
 
-        final Method[] methods = clazz.getDeclaredMethods();
-
+        final Collection<Method> methods = testableMethodDiscoverer.discover(clazz);
+        
         for(Method method : methods) {
-            // JavaBean spec doesn't consider privates as bean members.
-            if(Modifier.isPrivate(method.getModifiers())){
-                continue;
-            }
-
             final String name = method.getName();
             if (name.startsWith("is") || name.startsWith("get")) {
                 try { 
-                    final Method setter = clazz.getDeclaredMethod(getSetterEquivalent(method), method.getReturnType());
+                    final Method setter = testableMethodDiscoverer.getAssociatedSetter(clazz, method);
                     final GetterSetterPair getterSetterPair = new GetterSetterPair(method, setter);
                     getterSetterPairs.add(new GetterSetterPair(method, setter));
                     propertyGetterSetterMap.put(getPropertyName(method), getterSetterPair);
@@ -84,6 +94,7 @@ public class BTester {
             }
         }
     }
+    
 
     public BTester override(final String property, final PropertyGenerator<?> propertyGenerator) {
         final GetterSetterPair getterSetterPair = propertyGetterSetterMap.get(property);
@@ -166,13 +177,15 @@ public class BTester {
      *
      * @throws NoDefaultConstructorException If no default constructor can be found for the class under interrogation.
      * @throws TestException If any other exception is encountered during test execution.
+     * @return A Collection containing the names of properties that were tested by this execution
      */
-    public void test() {
+    public Collection<String> test() {
         logger.info("Executing bean test on class " + this.clazzUnderTest);
 
         final PropertyGeneratorFactory propertyGeneratorFactory = new PropertyGeneratorFactory();
         final TesterFactory testerFactory = new TesterFactory();
         final Object classToTest = newInstance(this.clazzUnderTest);
+        final Collection<String> testedProperties = new LinkedList<String>();
 
         for(GetterSetterPair getterSetterPair : getterSetterPairs) {
             final String propertyToTest = getterSetterPair.getProperty();
@@ -180,10 +193,12 @@ public class BTester {
                 PropertyGenerator<?> propertyGenerator = getPropertyGenerator(propertyGeneratorFactory, getterSetterPair);
                 Tester tester = getTester(testerFactory, getterSetterPair);
                 tester.executeTest(classToTest, getterSetterPair.getSetter(), getterSetterPair.getGetter(), propertyGenerator);
+                testedProperties.add(propertyToTest);
             }
         }
 
         logger.info("Completed bean test on class " + this.clazzUnderTest);
+        return testedProperties;
     }
 
     private <T> T newInstance(final Class<T> clazz) throws NoDefaultConstructorException, TestException {
