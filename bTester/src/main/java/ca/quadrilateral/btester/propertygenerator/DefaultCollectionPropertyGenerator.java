@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -26,7 +26,7 @@ public class DefaultCollectionPropertyGenerator implements PropertyGenerator<Col
 		} else if (List.class.isAssignableFrom(objectClass)) {
 			return new ArrayList(objects);
 		} else if (Queue.class.isAssignableFrom(objectClass)) {
-			return new PriorityQueue(objects);
+			return new LinkedList(objects);
 		} else if (Collection.class.equals(objectClass)) {
 		    return new ArrayList(objects);
 		} else {
