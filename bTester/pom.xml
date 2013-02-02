@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ca.quadrilateral.btester</groupId>
 	<artifactId>btester</artifactId>
-	<version>0.9.2-SNAPSHOT</version>
+	<version>0.9.3</version>
 	<licenses>
 		<license>
 			<name>Simplified BSD License</name>
