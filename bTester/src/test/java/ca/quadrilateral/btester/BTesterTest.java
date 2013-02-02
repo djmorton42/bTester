@@ -32,6 +32,10 @@ package ca.quadrilateral.btester;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -41,7 +45,6 @@ import ca.quadrilateral.btester.exception.NoDefaultConstructorException;
 import ca.quadrilateral.btester.exception.TestException;
 import ca.quadrilateral.btester.propertygenerator.PropertyGenerator;
 import ca.quadrilateral.btester.tester.AbstractTester;
-import ca.quadrilateral.btester.tester.Tester;
 
 public final class BTesterTest
 {
@@ -111,7 +114,49 @@ public final class BTesterTest
     		}
     	}
     }
+    
+    static class ArrayClass {
+    	private String[] a = null;
+    	private int[] b = null;
+    	
+    	public String[] getA() { return a; }    	
+    	public void setA(final String[] a) { this.a = a; }
+    	
+    	public int[] getB() { return b; }
+    	public void setB(final int[] b) { this.b = b; }
+    }
+    
+    static class MapAndCollectionClass {
+    	private Map<String, String> a = null;
+    	private Set<String> b = null;
+    	private List<String> c = null;
+    	private Queue<String> d = null;
+    	
+		public Map<String, String> getA() { return a; }
+		public void setA(Map<String, String> a) { this.a = a; }
+		public Set<String> getB() {	return b; }
+		public void setB(Set<String> b) { this.b = b; }
+		public List<String> getC() { return c; }
+		public void setC(List<String> c) { this.c = c; }
+		public Queue<String> getD() { return d; }
+		public void setD(Queue<String> d) { this.d = d; }
+    }
 
+    @Test
+    public void testHandlesMapsAndCollections() {
+    	final Collection<String> testedProperties = new BTester(MapAndCollectionClass.class).test();
+    	Assert.assertTrue("Array property 'a' should have been tested", testedProperties.contains("a"));
+    	Assert.assertTrue("Array property 'b' should have been tested", testedProperties.contains("b"));
+    	Assert.assertTrue("Array property 'c' should have been tested", testedProperties.contains("c"));
+    	Assert.assertTrue("Array property 'd' should have been tested", testedProperties.contains("d"));    	
+    }
+    
+    @Test
+    public void testHandlesArrayProperties() {
+    	final Collection<String> testedProperties = new BTester(ArrayClass.class).test();
+    	Assert.assertTrue("Array property 'a' should have been tested", testedProperties.contains("a"));
+    	Assert.assertTrue("Array property 'b' should have been tested", testedProperties.contains("b"));
+    }
     
     @Test
     public void testHandlesAbstractSuperMethods() {

@@ -30,7 +30,7 @@ or implied, of Daniel Morton or contributors.
 
 package ca.quadrilateral.btester.propertygenerator;
 
-import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -69,6 +69,12 @@ public class PropertyGeneratorFactory {
 		if (generatorClass == null) {
 		    if (propertyType.isEnum()) {
 		        return new DefaultEnumPropertyGenerator(propertyType);
+		    } else if (propertyType.isArray()) {
+		    	return new DefaultArrayPropertyGenerator(propertyType.getComponentType());
+		    } else if (Collection.class.isAssignableFrom(propertyType)) {
+		    	return new DefaultCollectionPropertyGenerator(propertyType);		    	
+		    } else if (Map.class.isAssignableFrom(propertyType)) {
+		    	return new DefaultMapPropertyGenerator();
 		    }
 		    
 			return new DefaultObjectPropertyGenerator(propertyType);
